@@ -1,0 +1,1 @@
+E:\cuda_test\VectAdd\x64\Debug\VectAdd.exe
