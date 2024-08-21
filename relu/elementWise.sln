@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34024.191
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "elementWise", "elementWise.vcxproj", "{4B54D397-909E-41A1-81AC-282EE42159FE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4B54D397-909E-41A1-81AC-282EE42159FE}.Debug|x64.ActiveCfg = Debug|x64
+		{4B54D397-909E-41A1-81AC-282EE42159FE}.Debug|x64.Build.0 = Debug|x64
+		{4B54D397-909E-41A1-81AC-282EE42159FE}.Release|x64.ActiveCfg = Release|x64
+		{4B54D397-909E-41A1-81AC-282EE42159FE}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CBF24312-0C84-42D2-93C9-BCF9427C38A0}
+	EndGlobalSection
+EndGlobal
