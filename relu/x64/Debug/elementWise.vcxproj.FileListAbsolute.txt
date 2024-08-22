@@ -1,1 +1,2 @@
 E:\cuda_test\elementWise\x64\Debug\elementWise.exe
+E:\cuda_test\relu\x64\Debug\elementWise.exe

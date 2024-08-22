@@ -23,6 +23,8 @@
 
 #define N 1000000
 
+#define FLOAT4(value) *((float4*)(&value))
+
 
 __global__ void relu_kernel(float* input, float* output, int n)
 {
@@ -34,7 +36,19 @@ __global__ void relu_kernel(float* input, float* output, int n)
 
 __global__ void relu_kernel_vec4(float* input, float* output, int n)
 {
+	int index = (blockIdx.x * blockDim.x + threadIdx.x) * 4;
 
+	if (index < n)
+	{
+		float4 tmpx = FLOAT4(input[index]);
+		float4 tmpy;
+		tmpy.x = fmaxf(0, tmpx.x);
+		tmpy.y = fmaxf(0, tmpx.y);
+		tmpy.z = fmaxf(0, tmpx.z);
+		tmpy.w = fmaxf(0, tmpx.w);
+
+		FLOAT4(output[index]) = tmpy;
+	}
 }
 
 
@@ -72,12 +86,14 @@ int main()
 
 	CHECK(cudaMemcpy(d_input, input, input_bytes, cudaMemcpyHostToDevice));
 
-	unsigned int grid_x = (N + BLOCK_SIZE - 1) / BLOCK_SIZE;
+	//unsigned int grid_x = (N + BLOCK_SIZE - 1) / BLOCK_SIZE;
+	unsigned int grid_x = (N / 4 + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
 	dim3 grid_size(grid_x);
 	dim3 block_size(BLOCK_SIZE);
 
-	relu_kernel<<<grid_size, block_size >>>(d_input, d_output, N);
+	//relu_kernel<<<grid_size, block_size >>>(d_input, d_output, N);
+	relu_kernel_vec4 <<<grid_size, block_size >>> (d_input, d_output, N);
 	relu_cpu(input, cpu_output, N);
 
 	CHECK(cudaMemcpy(gpu_output, d_output, output_bytes, cudaMemcpyDeviceToHost));
@@ -88,7 +104,7 @@ int main()
 	{
 		if (fabs(gpu_output[i] - cpu_output[i]) > 1e-10)
 		{
-			printf("error, index: %d", i);
+			printf("error, index: %d, gpu: %.2f, cpu: %.2f", i, gpu_output[i], cpu_output[i]);
 			exit(1);
 		}
 	}

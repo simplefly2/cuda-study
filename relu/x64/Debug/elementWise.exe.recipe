@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>E:\cuda_test\elementWise\x64\Debug\elementWise.exe</FullPath>
+      <FullPath>E:\cuda_test\relu\x64\Debug\elementWise.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />
