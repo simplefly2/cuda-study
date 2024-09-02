@@ -1,0 +1,15 @@
+x64\debug\kernel.cu.obj
+e:\cuda_test\layernorm\x64\debug\layernorm.ilk
+e:\cuda_test\layernorm\x64\debug\layernorm.exe
+e:\cuda_test\layernorm\x64\debug\layernorm.pdb
+e:\cuda_test\layernorm\x64\debug\layernorm.lib
+e:\cuda_test\layernorm\x64\debug\layernorm.exp
+e:\cuda_test\layernorm\x64\debug\kernel.cu.cache
+e:\cuda_test\layernorm\x64\debug\kernel.cu.obj
+e:\cuda_test\layernorm\x64\debug\vc143.pdb
+e:\cuda_test\layernorm\x64\debug\layernorm.tlog\cudacompile.read.1u.tlog
+e:\cuda_test\layernorm\x64\debug\layernorm.tlog\cudacompile.write.1u.tlog
+e:\cuda_test\layernorm\x64\debug\layernorm.tlog\link.command.1.tlog
+e:\cuda_test\layernorm\x64\debug\layernorm.tlog\link.read.1.tlog
+e:\cuda_test\layernorm\x64\debug\layernorm.tlog\link.write.1.tlog
+e:\cuda_test\layernorm\x64\debug\layernorm.tlog\link.write.2u.tlog

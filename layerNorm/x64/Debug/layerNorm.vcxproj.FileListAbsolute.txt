@@ -1,0 +1,1 @@
+E:\cuda_test\layerNorm\x64\Debug\layerNorm.exe
