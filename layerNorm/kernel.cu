@@ -16,7 +16,7 @@
 
 
 #define M 1024
-#define N 768
+#define N 2048
 
 #define BLOCK_SIZE 1024
 #define WARP_SIZE 32
@@ -43,6 +43,8 @@ void cpu_layernorm(T * input, T * output, T g, T b, int m, int n)
 
 		mean = mean_sum / n;
 
+		if(i==1) printf("########## cpu mean: %.8f \n", mean);
+
 		// std
 		T std_sum = (T)0.0;
 		for (unsigned j = 0; j < n; ++j)
@@ -51,6 +53,7 @@ void cpu_layernorm(T * input, T * output, T g, T b, int m, int n)
 		}
 
 		std = sqrtf(std_sum / n);
+		if (i == 1) printf("########## cpu std: %.8f \n", std);
 
 		// output: (xi-mean) / std;
 		for (unsigned k = 0; k < n; ++k)
@@ -103,7 +106,7 @@ __global__ void layerNorm_kernel(T* input, T* output, T g, T b, int m, int n)
 template <typename T>
 __device__ T warpReduce(T val)
 {
-	for (int offset = WARP_SIZE / 2; offset > 0; offset >>= 2)
+	for (int offset = WARP_SIZE / 2; offset > 0; offset >>= 1)
 	{
 		val += __shfl_down_sync(0xffffffff, val, offset);
 	}
@@ -137,6 +140,8 @@ __global__ void layerNorm_warp(T* input, T* output, T g, T b, int m, int n)
 
 		mean = mean / n;
 
+		if (bid == 0 && warpid == 0 && laneid == 0) printf("######### gpu mean: %.8f \n", mean);
+
 		// __syncthreads();
 		
 		// std:
@@ -162,14 +167,77 @@ __global__ void layerNorm_warp(T* input, T* output, T g, T b, int m, int n)
 	}
 
 }
-//
-//// block reduce
-//__global__ void layerNorm_kernel_1(float* input, float* output, float g, float b, int m, int n)
-//{
-//
-//
-//}
-//
+
+
+// block reduce:
+template <typename T>
+__device__ T blockReduce(T val)
+{
+	int warpid = threadIdx.x / WARP_SIZE;
+	int laneid = threadIdx.x % WARP_SIZE;
+
+	int warp_num = blockDim.x / WARP_SIZE;
+
+	__shared__ T warp_sum[32];
+
+	val = warpReduce<T>(val);
+
+	if (laneid == 0)
+		warp_sum[warpid] = val;
+
+	__syncthreads();
+
+	val = threadIdx.x < 32 ? warp_sum[threadIdx.x] : (T)0.0;
+
+	val = warpReduce<T>(val);
+
+	return val;
+}
+
+
+// 一个 block 处理一行数据：
+template <typename T>
+__global__ void layerNorm_block(T* input, T* output, T g, T b, int m, int n)
+{
+	int bid = blockIdx.x;
+	int tid = threadIdx.x;
+
+	int row = bid;
+	if (row < m)
+	{
+		T* inp = input + row * n;
+
+		T sum = (T)0.0;
+		for (int i = tid; i < n; i += blockDim.x)
+			sum += inp[i];
+
+		sum = blockReduce<T>(sum);
+
+		__shared__ float mean;
+		if (tid == 0) mean = sum / n;
+		if (bid == 1 && tid == 0) printf("gpu mean: %.6f \n", mean);
+
+		__syncthreads();
+
+		sum = (T)0.0;
+		for (int i = tid; i < n; i += blockDim.x)
+			sum += (inp[i] - mean) * (inp[i] - mean);
+
+		sum = blockReduce<T>(sum);
+
+		__shared__ float std;
+		if (tid == 0) std = sqrtf(sum / n);
+		if (bid == 1 && tid == 0) printf("gpu std: %.6f \n", std);
+
+		__syncthreads();
+
+		for (int i = tid; i < n; i += blockDim.x)
+			output[row*n+i] = g*(inp[i] - mean) / (std + 1e-6) + b;
+
+	}
+}
+
+
 //// shared 加速 reduce操作：
 //// reduce + vec4
 //__global__ void layerNorm_kernel_3(float* input, float* output, float g, float b, int m, int n)
@@ -228,10 +296,15 @@ int main()
 	//dim3 block_size(BLOCK_SIZE);
 	//layerNorm_kernel<<<grid_size, block_size >>>(d_input, d_output, g, b, M, N);
 
-	size_t grid_x = (M + (BLOCK_SIZE/WARP_SIZE) - 1) / (BLOCK_SIZE/WARP_SIZE);
+	//size_t grid_x = (M + (BLOCK_SIZE/WARP_SIZE) - 1) / (BLOCK_SIZE/WARP_SIZE);
+	//dim3 grid_size(grid_x);
+	//dim3 block_size(BLOCK_SIZE);
+	//layerNorm_warp<<<grid_size, block_size>>>(d_input, d_output, g, b, M, N);
+
+	size_t grid_x = M;
 	dim3 grid_size(grid_x);
 	dim3 block_size(BLOCK_SIZE);
-	layerNorm_warp<<<grid_size, block_size>>>(d_input, d_output, g, b, M, N);
+	layerNorm_block<<<grid_size, block_size >>>(d_input, d_output, g, b, M, N);
 
 	cudaMemcpy(gpu_output, d_output, data_bytes, cudaMemcpyDeviceToHost);
 
@@ -257,7 +330,6 @@ int main()
 			printf("gpu: %.8f, cpu: %.8f \n", gpu_output[i * N + j], output[i * N + j]);
 		}
 	}
-
 
 
 	free(input);

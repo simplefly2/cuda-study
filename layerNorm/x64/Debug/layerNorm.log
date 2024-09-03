@@ -1,20 +1,27 @@
 ﻿  Compiling CUDA source file kernel.cu...
   
   E:\cuda_test\layerNorm>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "D:\virsual_studio\1\VC\Tools\MSVC\14.37.32822\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include"  -G   --keep-dir x64\Debug  -maxrregcount=0  --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc143.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\kernel.cu.obj "E:\cuda_test\layerNorm\kernel.cu" 
+E:\cuda_test\layerNorm\kernel.cu(179): warning #177-D: variable "warp_num" was declared but never referenced
+            detected during:
+              instantiation of "T blockReduce(T) [with T=float]" 
+  (214): here
+              instantiation of "void layerNorm_block(T *, T *, T, T, int, int) [with T=float]" 
+  (306): here
+  
   kernel.cu
-E:\cuda_test\layerNorm\kernel.cu(203): warning C4305: “=”: 从“double”到“float”截断
-E:\cuda_test\layerNorm\kernel.cu(204): warning C4305: “=”: 从“double”到“float”截断
-E:\cuda_test\layerNorm\kernel.cu(232): warning C4267: “参数”: 从“size_t”转换到“unsigned int”，可能丢失数据
+E:\cuda_test\layerNorm\kernel.cu(270): warning C4305: “=”: 从“double”到“float”截断
+E:\cuda_test\layerNorm\kernel.cu(271): warning C4305: “=”: 从“double”到“float”截断
+E:\cuda_test\layerNorm\kernel.cu(304): warning C4267: “参数”: 从“size_t”转换到“unsigned int”，可能丢失数据
 E:\cuda_test\layerNorm\kernel.cu(32): warning C4018: “<”: 有符号/无符号不匹配
-  E:\cuda_test\layerNorm\kernel.cu(205): note: 查看对正在编译的函数 模板 实例化“void cpu_layernorm<float>(T *,T *,T,T,int,int)”的引用
+  E:\cuda_test\layerNorm\kernel.cu(272): note: 查看对正在编译的函数 模板 实例化“void cpu_layernorm<float>(T *,T *,T,T,int,int)”的引用
           with
           [
               T=float
           ]
 E:\cuda_test\layerNorm\kernel.cu(39): warning C4018: “<”: 有符号/无符号不匹配
-E:\cuda_test\layerNorm\kernel.cu(48): warning C4018: “<”: 有符号/无符号不匹配
-E:\cuda_test\layerNorm\kernel.cu(56): warning C4018: “<”: 有符号/无符号不匹配
-E:\cuda_test\layerNorm\kernel.cu(58): warning C4244: “=”: 从“double”转换到“T”，可能丢失数据
+E:\cuda_test\layerNorm\kernel.cu(50): warning C4018: “<”: 有符号/无符号不匹配
+E:\cuda_test\layerNorm\kernel.cu(59): warning C4018: “<”: 有符号/无符号不匹配
+E:\cuda_test\layerNorm\kernel.cu(61): warning C4244: “=”: 从“double”转换到“T”，可能丢失数据
           with
           [
               T=float
