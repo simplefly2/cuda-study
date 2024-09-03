@@ -1,0 +1,1 @@
+E:\cuda_test\softmax\x64\Debug\softmax.exe
