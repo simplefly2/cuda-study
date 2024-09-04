@@ -2,6 +2,6 @@
   
   E:\cuda_test\softmax>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "D:\virsual_studio\1\VC\Tools\MSVC\14.37.32822\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include"  -G   --keep-dir x64\Debug  -maxrregcount=0  --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc143.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\kernel.cu.obj "E:\cuda_test\softmax\kernel.cu" 
   kernel.cu
-E:\cuda_test\softmax\kernel.cu(181): warning C4018: “<”: 有符号/无符号不匹配
+E:\cuda_test\softmax\kernel.cu(347): warning C4018: “<”: 有符号/无符号不匹配
     正在创建库 E:\cuda_test\softmax\x64\Debug\softmax.lib 和对象 E:\cuda_test\softmax\x64\Debug\softmax.exp
   softmax.vcxproj -> E:\cuda_test\softmax\x64\Debug\softmax.exe
