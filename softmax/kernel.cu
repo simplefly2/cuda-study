@@ -189,7 +189,7 @@ __device__ float warpMax(float val)
 
 __device__ float warpSum(float sum)
 {
-	for (int offset = BLOCK_SIZE / 2; offset > 0; offset >>= 1)
+	for (int offset = WARP_SIZE / 2; offset > 0; offset >>= 1)
 	{
 		sum += __shfl_down_sync(0xffffffff, sum, offset);
 	}
@@ -231,6 +231,7 @@ __global__ void softmaxBlockWarp(float* input, float* output, int m, int n)
 		max_val = warpMax(max_val);
 
 		if (tid == 0) b_max = max_val;
+		__syncthreads();
 
 		// sum:
 		float sum = 0.0f;
@@ -247,6 +248,7 @@ __global__ void softmaxBlockWarp(float* input, float* output, int m, int n)
 		sum = warpSum(sum);
 
 		if (tid == 0) b_sum = sum;
+		__syncthreads();
 
 		// value:
 		for (int i = tid; i < n; i += blockDim.x)
