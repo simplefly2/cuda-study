@@ -11,8 +11,8 @@
 	if (err != cudaSuccess) \
 	{   \
 		printf("error: %s, %d \n", cudaGetErrorString(err), __LINE__); \
-	} while(0) \
-}
+	} \
+} while(0)
 
 #define BLOCK_SIZE 256
 #define WARP_SIZE 32
