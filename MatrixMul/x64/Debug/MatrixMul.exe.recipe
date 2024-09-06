@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>E:\cuda_test\matrixMul\x64\Debug\MatrixMul.exe</FullPath>
+      <FullPath>E:\cuda_test\MatrixMul\x64\Debug\MatrixMul.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />

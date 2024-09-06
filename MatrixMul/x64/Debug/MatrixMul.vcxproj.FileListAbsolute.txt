@@ -1,1 +1,1 @@
-E:\cuda_test\matrixMul\x64\Debug\MatrixMul.exe
+E:\cuda_test\MatrixMul\x64\Debug\MatrixMul.exe

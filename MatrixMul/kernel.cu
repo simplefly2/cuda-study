@@ -14,7 +14,7 @@
 } while(0);
 
 
-#define BLOCK_SIZE 256
+#define BLOCK_SIZE 32
 
 #define M 1024
 #define N 768
@@ -47,21 +47,119 @@ void cpu_matrixMul(T * A, T * B, T* C, int m, int n, int k)
 	}
 }
 
+// kerneo 0: 一个线程处理 C 矩阵一个对应位置的数据
+template <typename T>
+__global__ void matrixMulKernrl0(T* A, T* B, T* C, int m, int n, int k)
+{
+	int bidx = blockIdx.x;
+	int bidy = blockIdx.y;
+	int tidx = threadIdx.x;
+	int tidy = threadIdx.y;
+
+	int row = bidy * blockDim.y + tidy;
+	int col = bidx * blockDim.x + tidx;
+
+	if (row < m && col < k)
+	{
+		T sum = (T)0.0f;
+		for (int s = 0; s < n; ++s)
+		{
+			sum += A[row * n + s] * B[s * k + col];
+		}
+
+		C[row * k + col] = sum;
+	}
+
+}
+
+// kernel1: 
+// 结果矩阵分块计算，一个block负责计算一个方块的数据
+// block: (BLOCK_SIZE, BLOCK_SIZE)   分块大小
+//template <typename T>
+//__global__ void matrixMulKernel1(T* A, T* B, T* C, int m, int n, int k)
+//{
+//	// 分配shared内存大小为一个block加载的数据大小：
+//	__shared__ T s_a[BLOCK_SIZE][BLOCK_SIZE];
+//	__shared__ T s_b[BLOCK_SIZE][BLOCK_SIZE];
+//
+//	int bidx = blockIdx.x;
+//	int bidy = blockIdx.y;
+//	int tidx = threadIdx.x;
+//	int tidy = threadIdx.y;
+//
+//	int row = bidy * blockDim.y + tidy;
+//	int col = bidx * blockDim.x + tidx;
+//
+//	// 窗口滑动，分块计算
+//	for (int i = 0; i < n / BLOCK_SIZE; ++i)
+//	{
+//		if (row < m && col < k)
+//		{
+//			// load data:
+//			s_a[tidy][tidx] = A[row*n + tidx + i*BLOCK_SIZE];
+//			s_b[tidy][tidx] = B[(tidy + i * BLOCK_SIZE) * k + col];
+//
+//			__syncthreads();
+//
+//			// 子方块计算：
+//			T sum = (T)0.0f;
+//			for (int s = 0; s < BLOCK_SIZE; ++s)
+//				sum += s_a[tidy][s] * s_b[s][tidx];
+//
+//			C[row * k + col] = sum;
+//		}
+//	}
+//}
+
 
 template <typename T>
-__global__ void marixMulKernrl0(T* A, T* B, T* C, int m, int n, int k)
+__global__ void matrixMulKernel1(T* A, T* B, T* C, int m, int n, int k)
 {
+	__shared__ T s_a[BLOCK_SIZE][BLOCK_SIZE];
+	__shared__ T s_b[BLOCK_SIZE][BLOCK_SIZE];
 
+	int bidx = blockIdx.x;
+	int bidy = blockIdx.y;
+	int tidx = threadIdx.x;
+	int tidy = threadIdx.y;
 
+	int row = bidy * BLOCK_SIZE + tidy;
+	int col = bidx * BLOCK_SIZE + tidx;
 
+	T sum = (T)0.0f;
 
+	// 确保线程不会越界  
+	if (row < m && col < k)
+	{
+		// 窗口滑动，分块计算  
+		for (int i = 0; i < (n + BLOCK_SIZE - 1) / BLOCK_SIZE; ++i)
+		{
+			int a_idx = row * n + tidx + i * BLOCK_SIZE;
+			int b_idx = (tidy + i * BLOCK_SIZE) * k + col;
+
+			// 加载数据到shared memory  
+			s_a[tidy][tidx] = (a_idx < m * n) ? A[a_idx] : (T)0.0f;
+			s_b[tidy][tidx] = (b_idx < n * k) ? B[b_idx] : (T)0.0f;
+
+			__syncthreads();
+
+			// 子方块计算  
+			for (int s = 0; s < BLOCK_SIZE; ++s)
+				sum += s_a[tidy][s] * s_b[s][tidx];
+
+			__syncthreads(); // 理论上这里不需要，因为每个线程都在独立计算sum  
+		}
+
+		// 将结果写回全局内存  
+		C[row * k + col] = sum;
+	}
 }
 
 
 int main()
 {
 	// cpu:
-	float* A, *B, *C;
+	float* A, * B, * C, *gpu_C;
 
 	size_t A_bytes = sizeof(float) * M * N;
 	size_t B_bytes = sizeof(float) * N * K;
@@ -70,6 +168,7 @@ int main()
 	A = (float*)malloc(A_bytes);
 	B = (float*)malloc(B_bytes);
 	C = (float*)malloc(C_bytes);
+	gpu_C = (float*)malloc(C_bytes);
 
 	for (int i = 0; i < M; ++i)
 	{
@@ -89,7 +188,6 @@ int main()
 
 
 	// gpu;
-	float* gpu_C;
 	float* d_A, * d_B, * d_C;
 
 	cudaMalloc((void**)&d_A, A_bytes);
@@ -101,11 +199,18 @@ int main()
 	cudaMemcpy(d_B, B, B_bytes, cudaMemcpyHostToDevice);
 
 	
+	//int grid_x = (K + BLOCK_SIZE - 1) / BLOCK_SIZE;
+	//int grid_y = (M + BLOCK_SIZE - 1) / BLOCK_SIZE;
+	//dim3 grid_size(grid_x, grid_y);
+	//dim3 block_size(BLOCK_SIZE, BLOCK_SIZE);
+	//matrixMulKernrl0<<<grid_size, block_size>>>(d_A, d_B, d_C, M, N, K);
+
 	int grid_x = (K + BLOCK_SIZE - 1) / BLOCK_SIZE;
 	int grid_y = (M + BLOCK_SIZE - 1) / BLOCK_SIZE;
 	dim3 grid_size(grid_x, grid_y);
 	dim3 block_size(BLOCK_SIZE, BLOCK_SIZE);
-	marixMulKernrl0<<<grid_size, block_size>>>(d_A, d_B, d_C, M, N, K);
+	matrixMulKernel1<<<grid_size, block_size >>>(d_A, d_B, d_C, M, N, K);
+
 
 	cudaMemcpy(gpu_C, d_C, C_bytes, cudaMemcpyDeviceToHost);
 
@@ -129,7 +234,7 @@ int main()
 	int offset = 100;
 	for (int i = 0; i < 20; ++i)
 	{
-		printf("cpu value: %.6f, gpu value: %.6f \n", C[offset + i], d_C[offset+i]);
+		printf("cpu value: %.6f, gpu value: %.6f \n", C[offset + i], gpu_C[offset+i]);
 	}
 
 
