@@ -30,6 +30,18 @@
 */
 
 
+/*
+* v0: base版，基础版
+* v1: 共享内存分块
+* v2: 寄存器分块
+* v3: 重排索引
+* v4: float4 访存
+* v5: 解 bank 冲突
+* v6: 内积转外积
+* v7: 双缓冲
+*/
+
+
 template <typename T>
 void cpu_matrixMul(T * A, T * B, T* C, int m, int n, int k)
 {
@@ -47,7 +59,7 @@ void cpu_matrixMul(T * A, T * B, T* C, int m, int n, int k)
 	}
 }
 
-// kerneo 0: 一个线程处理 C 矩阵一个对应位置的数据
+// v0:  一个线程处理 C 矩阵一个对应位置的数据
 template <typename T>
 __global__ void matrixMulKernrl0(T* A, T* B, T* C, int m, int n, int k)
 {
@@ -72,49 +84,13 @@ __global__ void matrixMulKernrl0(T* A, T* B, T* C, int m, int n, int k)
 
 }
 
-// kernel1: 
+// v1: 
 // 结果矩阵分块计算，一个block负责计算一个方块的数据
 // block: (BLOCK_SIZE, BLOCK_SIZE)   分块大小
-//template <typename T>
-//__global__ void matrixMulKernel1(T* A, T* B, T* C, int m, int n, int k)
-//{
-//	// 分配shared内存大小为一个block加载的数据大小：
-//	__shared__ T s_a[BLOCK_SIZE][BLOCK_SIZE];
-//	__shared__ T s_b[BLOCK_SIZE][BLOCK_SIZE];
-//
-//	int bidx = blockIdx.x;
-//	int bidy = blockIdx.y;
-//	int tidx = threadIdx.x;
-//	int tidy = threadIdx.y;
-//
-//	int row = bidy * blockDim.y + tidy;
-//	int col = bidx * blockDim.x + tidx;
-//
-//	// 窗口滑动，分块计算
-//	for (int i = 0; i < n / BLOCK_SIZE; ++i)
-//	{
-//		if (row < m && col < k)
-//		{
-//			// load data:
-//			s_a[tidy][tidx] = A[row*n + tidx + i*BLOCK_SIZE];
-//			s_b[tidy][tidx] = B[(tidy + i * BLOCK_SIZE) * k + col];
-//
-//			__syncthreads();
-//
-//			// 子方块计算：
-//			T sum = (T)0.0f;
-//			for (int s = 0; s < BLOCK_SIZE; ++s)
-//				sum += s_a[tidy][s] * s_b[s][tidx];
-//
-//			C[row * k + col] = sum;
-//		}
-//	}
-//}
-
-
 template <typename T>
 __global__ void matrixMulKernel1(T* A, T* B, T* C, int m, int n, int k)
 {
+	// 分配shared内存大小为一个block加载的数据大小：
 	__shared__ T s_a[BLOCK_SIZE][BLOCK_SIZE];
 	__shared__ T s_b[BLOCK_SIZE][BLOCK_SIZE];
 
@@ -123,37 +99,40 @@ __global__ void matrixMulKernel1(T* A, T* B, T* C, int m, int n, int k)
 	int tidx = threadIdx.x;
 	int tidy = threadIdx.y;
 
-	int row = bidy * BLOCK_SIZE + tidy;
-	int col = bidx * BLOCK_SIZE + tidx;
+	int row = bidy * blockDim.y + tidy;
+	int col = bidx * blockDim.x + tidx;
 
+	// 窗口滑动，分块计算
 	T sum = (T)0.0f;
-
-	// 确保线程不会越界  
 	if (row < m && col < k)
-	{
-		// 窗口滑动，分块计算  
 		for (int i = 0; i < (n + BLOCK_SIZE - 1) / BLOCK_SIZE; ++i)
 		{
-			int a_idx = row * n + tidx + i * BLOCK_SIZE;
-			int b_idx = (tidy + i * BLOCK_SIZE) * k + col;
 
-			// 加载数据到shared memory  
-			s_a[tidy][tidx] = (a_idx < m * n) ? A[a_idx] : (T)0.0f;
-			s_b[tidy][tidx] = (b_idx < n * k) ? B[b_idx] : (T)0.0f;
+			{
+				// load data:
+				int a_idx = row * n + tidx + BLOCK_SIZE * i;
+				int b_idx = (tidy + BLOCK_SIZE * i) * k + col;
 
-			__syncthreads();
+				s_a[tidy][tidx] = a_idx < m * n ? A[a_idx] : (T)0.0f;
+				s_b[tidy][tidx] = b_idx < n * k ? B[b_idx] : (T)0.0f;
 
-			// 子方块计算  
-			for (int s = 0; s < BLOCK_SIZE; ++s)
-				sum += s_a[tidy][s] * s_b[s][tidx];
+				__syncthreads();
 
-			__syncthreads(); // 理论上这里不需要，因为每个线程都在独立计算sum  
+				// 子方块计算：
+
+				for (int s = 0; s < BLOCK_SIZE; ++s)
+					sum += s_a[tidy][s] * s_b[s][tidx];
+
+			}
 		}
-
-		// 将结果写回全局内存  
 		C[row * k + col] = sum;
-	}
 }
+
+// v2: 
+
+
+
+
 
 
 int main()
