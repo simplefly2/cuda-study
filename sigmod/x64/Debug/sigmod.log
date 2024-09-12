@@ -1,0 +1,16 @@
+﻿  Compiling CUDA source file kernel.cu...
+  
+  E:\cuda-study\sigmod>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "D:\virsual_studio\1\VC\Tools\MSVC\14.37.32822\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include"  -G   --keep-dir x64\Debug  -maxrregcount=0  --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc143.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\kernel.cu.obj "E:\cuda-study\sigmod\kernel.cu" 
+  kernel.cu
+E:\cuda-study\sigmod\kernel.cu(49): warning C4244: “=”: 从“double”转换到“T”，可能丢失数据
+          with
+          [
+              T=float
+          ]
+  E:\cuda-study\sigmod\kernel.cu(112): note: 查看对正在编译的函数 模板 实例化“void cpu_sigmod<float>(T *,T *,int,int)”的引用
+          with
+          [
+              T=float
+          ]
+    正在创建库 E:\cuda-study\sigmod\x64\Debug\sigmod.lib 和对象 E:\cuda-study\sigmod\x64\Debug\sigmod.exp
+  sigmod.vcxproj -> E:\cuda-study\sigmod\x64\Debug\sigmod.exe

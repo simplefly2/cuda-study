@@ -1,0 +1,1 @@
+E:\cuda-study\sigmod\x64\Debug\sigmod.exe
