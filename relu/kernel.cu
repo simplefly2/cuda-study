@@ -11,13 +11,13 @@
 #include <math.h>
 #include "cuda_runtime.h"
 
-#define CHECK(func) {                                                     \
+#define CHECK(func) do{                                                     \
 	cudaError_t err = func;                                               \
 	if (err != cudaSuccess)                                               \
 	{                                                                     \
 		printf("error: %s, line: %d", cudaGetErrorString(err), __LINE__);  \
  	}                                                                     \
-}                                                                         \
+}while(0)                                                                         \
 
 #define BLOCK_SIZE 32
 
