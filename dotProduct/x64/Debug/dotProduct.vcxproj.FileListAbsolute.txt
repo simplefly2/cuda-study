@@ -1,0 +1,1 @@
+E:\cuda-study\dotProduct\x64\Debug\dotProduct.exe

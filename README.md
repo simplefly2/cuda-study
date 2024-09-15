@@ -21,9 +21,19 @@
 	-- v7: 双缓冲
 	
 - sigmoid
-	-- v0: base (9.12)
-	-- v1: vec4 (9.12)
+	-- v0: base (9/12)
+	-- v1: vec4 (9/12)
+	
 
 - relu
-	-- v0: base (9.12)
-	-- v1: vec4 (9.12)
+	-- v0: base (9/12)
+	-- v1: vec4 (9/12)
+	
+- histogram
+	-- v0: atomicAdd (9/13)
+	
+	
+- dot-produce
+	-- v0: base (9/15)
+	-- v1: shared + block reduce (9/15)
+	-- v2: float4 + shared + block reduce 

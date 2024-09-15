@@ -1,0 +1,1 @@
+E:\cuda-study\histogram\x64\Debug\histogram.exe
